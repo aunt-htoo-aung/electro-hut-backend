@@ -1,4 +1,7 @@
 <?php
+$user_id = $_SESSION['user_id'];
+
+//Get Wishlist Data
 try {
     $query = "SELECT * FROM Wishlist";
     $stmt = $conn->query($query);
@@ -6,16 +9,13 @@ try {
 } catch (PDOException $e) {
     $E->getMessage();
 }
+
+//Add or Delete Wishlist When Click Wishlist Button
 if (isset($_POST['addWishlist'])) {
-    $user_id = $_SESSION['user_id'];
     $product_id = $_POST['product_id'];
+    $check_wishlist = check_wishlist($user_id, $product_id, $conn);
 
     try {
-        $wishlist_check_query = "SELECT * FROM Cart where user_id=? AND product_id=?";
-        $stmt = $conn->prepare($wishlist_check_query);
-        $stmt->execute([$user_id, $product_id]);
-        $wishlists = $stmt->fetch();
-
         if ($wishlists) {
             $delete_query = "DELETE FROM Wishlist WHERE user_id = ? AND product_id = ?";
             $stmt = $conn->prepare($deleteQuery);
@@ -25,8 +25,34 @@ if (isset($_POST['addWishlist'])) {
             $stmt = $conn->prepare($insert_query);
             $stmt->execute([$user_id, $product_id]);
         }
-        header("location:index.html");
     } catch (PDOException $e) {
         $e->getMessage();
     }
+    header("location:index.html");
+}
+
+//Delete Wishlist From Wishlist Page
+if (isset($_POST['deleteWishlist'])) {
+    $product_id = $_POST['product_id'];
+    try {
+        $delete_query = 'DELETE FROM Wishlist WHERE user_id=? AND product_id=?';
+        $stmt = $conn->prepare($delete_query);
+        $stmt->execute([$userId, $product_id]);
+    } catch (PDOException $e) {
+        $e->getMessage();
+    }
+}
+
+//Check Wishlist is existed or not
+function check_wishlist($user_id, $product_id, $conn)
+{
+    try {
+        $wishlist_check_query = "SELECT * FROM Wishlist WHERE user_id=? AND product_id=?";
+        $stmt = $conn->prepare($wishlist_check_query);
+        $stmt->execute([$user_id, $product_id]);
+        $wishlists = $stmt->fetch();
+    } catch (PDOException $e) {
+        $e->getMessage();
+    }
+    return $wishlists;
 }
