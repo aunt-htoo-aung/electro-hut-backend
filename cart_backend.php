@@ -1,4 +1,5 @@
 <?php
+include "authenticate.php";
 $user_id = $_SESSION['user_id'];
 
 //Get Cart Data
@@ -31,6 +32,8 @@ if (isset($_POST['addToCart'])) {
     } catch (PDOException $e) {
         $e->getMessage();
     }
+    header('location:index.php');
+    exit;
 }
 
 //Delete Cart From Cart Page
@@ -43,7 +46,8 @@ if (isset($_POST['deleteCart'])) {
     } catch (PDOException $e) {
         $e->getMessage();
     }
-    header('location:cart.html');
+    header('location:cart.php');
+    exit;
 }
 
 //Update Cart From Cart Page
@@ -57,7 +61,8 @@ if (isset($_POST['updateCart'])) {
     } catch (PDOException $e) {
         $e->getMessage();
     }
-    header('location:cart.html');
+    header('location:cart.php');
+    exit;
 }
 
 //Check Cart is existed or not

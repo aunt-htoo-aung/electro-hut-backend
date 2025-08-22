@@ -1,4 +1,5 @@
 <?php
+include "authenticate.php";
 $user_id = $_SESSION['user_id'];
 
 //Get Wishlist Data
@@ -28,7 +29,8 @@ if (isset($_POST['addWishlist'])) {
     } catch (PDOException $e) {
         $e->getMessage();
     }
-    header("location:index.html");
+    header("location:index.php");
+    exit;
 }
 
 //Delete Wishlist From Wishlist Page
@@ -41,6 +43,8 @@ if (isset($_POST['deleteWishlist'])) {
     } catch (PDOException $e) {
         $e->getMessage();
     }
+    header('location:wishlist.php');
+    exit;
 }
 
 //Check Wishlist is existed or not
