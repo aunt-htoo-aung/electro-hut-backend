@@ -1,0 +1,57 @@
+<?php
+//Get all orders
+try {
+    $sql = "
+        SELECT 
+            o.order_id,
+            o.user_id,
+            o.order_date,
+            o.status,
+            o.total_amount,
+            COUNT(oi.order_item_id) AS item_count
+        FROM Orders o
+        LEFT JOIN Order_Items oi ON o.order_id = oi.order_id
+        GROUP BY o.order_id, o.user_id, o.order_date, o.status, o.total_amount
+        ORDER BY o.order_date DESC
+    ";
+
+    $stmt = $conn->query($sql);
+    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    echo "Error fetching orders: " . $e->getMessage();
+}
+
+// Get order details by ID
+$orderId = $_GET['order_id'] ?? null;
+
+if ($orderId) {
+    try {
+        $sql = "
+            SELECT 
+                oi.order_item_id,
+                p.product_name,
+                oi.quantity,
+                oi.total_amount
+            FROM Order_Items oi
+            JOIN Product p ON oi.product_id = p.product_id
+            WHERE oi.order_id = ?
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$orderId]);
+        $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "Error fetching order items: " . $e->getMessage();
+    }
+} else {
+    echo "Invalid order ID.";
+}
+
+// Get pending order
+try {
+    $sql = "SELECT * FROM Orders WHERE status = 'Pending' ORDER BY order_date DESC";
+    $stmt = $conn->query($sql);
+    $pendingOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    echo "Error fetching orders: " . $e->getMessage();
+}
