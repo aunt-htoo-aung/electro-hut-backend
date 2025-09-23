@@ -12,7 +12,7 @@ if (isset($_POST['login'])) {
     $password = $_POST['password'];
     check_user_login($email, $password, $conn);
 } elseif (!isset($_SESSION['user_id']) && $current_page != "electro-hut/login.php") {
-    header('location:electro-hut/login.php');
+    header('location:../electro-hut/login.php');
     exit;
 }
 
@@ -26,7 +26,7 @@ function check_user_login($email, $password, $conn)
         $result = $stmt->fetch();
 
         if ($result) {
-            $_SESSION['user_id'] = $result['id'];
+            $_SESSION['user_id'] = $result['user_id'];
             $_SESSION['role'] = $result['role'];
             if ($result['role'] == 'ADMIN') {
                 header('location:../electro-hut/admin/dashboard.php');

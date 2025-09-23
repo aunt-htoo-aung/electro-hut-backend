@@ -1,4 +1,6 @@
 <?php
+require_once 'db_connect.php';
+
 //Get all orders
 try {
     $sql = "
@@ -14,7 +16,6 @@ try {
         GROUP BY o.order_id, o.user_id, o.order_date, o.status, o.total_amount
         ORDER BY o.order_date DESC
     ";
-
     $stmt = $conn->query($sql);
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -43,8 +44,6 @@ if ($orderId) {
     } catch (PDOException $e) {
         echo "Error fetching order items: " . $e->getMessage();
     }
-} else {
-    echo "Invalid order ID.";
 }
 
 // Get pending order

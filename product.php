@@ -2,7 +2,19 @@
 require_once 'db_connect.php';
 // Get all product
 try {
-    $query = "Select * From Product";
+    $query = "SELECT 
+    Product.*, 
+    Images.image_url AS primary_image_url,
+    Brand.brand_name,
+    Category.category_name
+    FROM 
+    Product
+    INNER JOIN Brand ON Product.brand_id = Brand.brand_id
+    INNER JOIN Category ON Product.category_id = Category.category_id
+    LEFT JOIN Images 
+    ON Product.product_id = Images.product_id 
+    AND Images.is_primary = TRUE;
+";
     $stmt = $conn->query($query);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -30,24 +42,43 @@ if (isset($_POST['add_product'])) {
     } catch (PDOException $e) {
         echo "Error adding product: " . $e->getMessage();
     }
-    $filename = $_FILES['image_urls']['name'];
+    $upload_dir = '../electro-hut-img/';
 
+    // Ensure the folder exists
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+    }
+
+    $filenames = $_FILES['image_urls']['name'];
+    $tmp_names = $_FILES['image_urls']['tmp_name'];
 
     $primary_set = false;
-    foreach ($filename as $key => $tmp_name) {
-        $url_path = '../images/' . $tmp_name;
-        move_uploaded_file($tmp_name, $url_path);
-        // First image is set as primary
-        $is_primary = !$primary_set ? 1 : 0;
-        $primary_set = true;
 
-        // Insert into Images table
-        try {
-            $stmt = $conn->prepare("INSERT INTO Images (product_id, image_url, is_primary)
-                                VALUES (?, ?, ?)");
-            $stmt->execute([$productId, $url_path, $is_primary]);
-        } catch (PDOException $e) {
-            echo "Error adding product images: " . $e->getMessage();
+    foreach ($filenames as $key => $original_name) {
+        $tmp_path = $tmp_names[$key];
+
+        // Optional: Add a unique name to avoid overwriting
+        $safe_filename = time() . '_' . basename($original_name);
+        $target_path = $upload_dir . $safe_filename;
+
+        if (move_uploaded_file($tmp_path, $target_path)) {
+            // First image is set as primary
+            $is_primary = !$primary_set ? 1 : 0;
+            $primary_set = true;
+
+            // Store relative path or just the filename, depending on your frontend
+            $db_image_url = 'electro-hut-img/' . $safe_filename;
+
+            // Insert into Images table
+            try {
+                $stmt = $conn->prepare("INSERT INTO Images (product_id, image_url, is_primary)
+                                    VALUES (?, ?, ?)");
+                $stmt->execute([$productId, $db_image_url, $is_primary]);
+            } catch (PDOException $e) {
+                echo "Error adding product images: " . $e->getMessage();
+            }
+        } else {
+            echo "Failed to move uploaded file: $original_name<br>";
         }
     }
 }
