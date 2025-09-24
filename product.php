@@ -84,23 +84,54 @@ if (isset($_POST['add_product'])) {
 }
 
 // Delete Product with ID
-// try {
-//     $query = "DELETE FROM Product WHERE product_id = ?";
-//     $stmt = $conn->prepare($query);
-//     $stmt->execute([$productId]);
-// } catch (PDOException $e) {
-//     echo "Error deleting product: " . $e->getMessage();
+// if (isset($_POST['delete_product'])) {
+//     $productId = $_POST['product_id'];
+//     try {
+//         $query = "DELETE FROM Product WHERE product_id = ?";
+//         $stmt = $conn->prepare($query);
+//         $stmt->execute([$productId]);
+//     } catch (PDOException $e) {
+//         echo "Error deleting product: " . $e->getMessage();
+//     }
 // }
+// Update Product with ID
+if (isset($_GET['id'])) {
+    $product_id = $_GET['id'];
+    try {
+        $sql = "SELECT p.product_id, p.product_name, p.brand_id, p.category_id, p.price, p.stock_qty, p.description,
+               b.brand_name, c.category_name,
+               -- Get the primary image separately
+               (SELECT image_url FROM Images WHERE product_id = p.product_id AND is_primary = 1 LIMIT 1) AS primary_image_url,
+               -- Get all other images
+               GROUP_CONCAT(CASE WHEN i.is_primary = 0 THEN i.image_url END) AS other_images
+                FROM Product p
+                LEFT JOIN Brand b ON p.brand_id = b.brand_id
+                LEFT JOIN Category c ON p.category_id = c.category_id
+                LEFT JOIN Images i ON p.product_id = i.product_id
+                WHERE p.product_id = $product_id
+                GROUP BY p.product_id";
+        $stmt = $conn->query($sql);
+        $edit_product = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $e->getMessage();
+    }
+    if (isset($_POST['edit_product'])) {
+        $product_name = $_POST['product_name'];
+        $description = $_POST['description'];
+        $categoryId = $_POST['category'];
+        $brandId = $_POST['brand'];
+        $price = $_POST['price'];
+        $stock_amount = $_POST['stock_amount'];
+        try {
+            $sql = "UPDATE Product SET product_name = ?, brand_id = ?, category_id = ?, price = ?, stock_qty = ?, description = ? WHERE product_id =?";
 
-// // Update Product with ID
-// try {
-//     $sql = "UPDATE Product SET product_name = ?, brand_id = ?, category_id = ?, price = ?, stock_qty = ?, description = ? WHERE product_id =?";
+            $stmt = $conn->prepare($sql);
 
-//     $stmt = $conn->prepare($sql);
+            $stmt->execute([$product_name, $brand_id, $category_id, $price, $stock_qty, $description, $product_id]);
 
-//     $stmt->execute([$product_name, $brand_id, $category_id, $price, $stock_qty, $description, $product_id]);
-
-//     echo "Product updated successfully!";
-// } catch (PDOException $e) {
-//     echo "Error updating product: " . $e->getMessage();
-// }
+            echo "Product updated successfully!";
+        } catch (PDOException $e) {
+            echo "Error updating product: " . $e->getMessage();
+        }
+    }
+}

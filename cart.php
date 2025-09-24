@@ -6,11 +6,23 @@ $user_id = $_SESSION['user_id'];
 
 //Get Cart Data
 try {
-    $query = "SELECT * FROM Cart";
+    $query = "SELECT 
+    c.cart_id,
+    c.quantity,
+    p.product_name,
+    b.brand_name,
+    p.stock_qty,
+    p.price,
+    i.image_url AS primary_image_url
+    FROM Cart c
+    JOIN Product p ON c.product_id = p.product_id
+    JOIN Brand b ON p.brand_id = b.brand_id
+    JOIN Images i ON i.product_id = p.product_id AND i.is_primary = 1
+    WHERE c.user_id = $user_id";
     $stmt = $conn->query($query);
     $carts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $E->getMessage();
+    $e->getMessage();
 }
 
 //Add or Update to Cart When Click Add to Cart Button

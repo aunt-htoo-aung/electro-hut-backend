@@ -7,8 +7,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Check Wishlist is existed or not
-function check_wishlist($user_id, $product_id, $conn)
-{
+function check_wishlist($user_id, $product_id, $conn){
     try {
         $wishlist_check_query = "SELECT * FROM Wishlist WHERE user_id = ? AND product_id = ?";
         $stmt = $conn->prepare($wishlist_check_query);
@@ -25,7 +24,18 @@ $user_id = $_SESSION['user_id'] ?? null;
 
 // Get Wishlist Data for logged-in user
 try {
-    $query = "SELECT * FROM Wishlist WHERE user_id = ?";
+    $query = "SELECT 
+    w.wishlist_id,
+    p.product_name,
+    b.brand_name,
+    p.stock_qty,
+    p.price,
+    i.image_url AS primary_image_url
+    FROM Wishlist w
+    JOIN Product p ON w.product_id = p.product_id
+    JOIN Brand b ON p.brand_id = b.brand_id
+    JOIN Images i ON i.product_id = p.product_id AND i.is_primary = 1
+    WHERE w.user_id = ?";
     $stmt = $conn->prepare($query);
     $stmt->execute([$user_id]);
     $wishlists = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -58,11 +68,11 @@ if (isset($_POST['addWishlist'])) {
 
 // Delete Wishlist From Wishlist Page
 if (isset($_POST['deleteWishlist'])) {
-    $product_id = $_POST['product_id'];
+    $wishlist_id = $_POST['wishlist_id'];
     try {
-        $delete_query = 'DELETE FROM Wishlist WHERE user_id = ? AND product_id = ?';
+        $delete_query = 'DELETE FROM Wishlist WHERE user_id = ? AND wishlist_id = ?';
         $stmt = $conn->prepare($delete_query);
-        $stmt->execute([$user_id, $product_id]);
+        $stmt->execute([$user_id, $wishlist_id]);
     } catch (PDOException $e) {
         echo "Error: " . $e->getMessage();
     }
