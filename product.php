@@ -111,7 +111,7 @@ if (isset($_GET['id'])) {
                 WHERE p.product_id = $product_id
                 GROUP BY p.product_id";
         $stmt = $conn->query($sql);
-        $edit_product = $stmt->fetch(PDO::FETCH_ASSOC);
+        $product_detail = $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         $e->getMessage();
     }

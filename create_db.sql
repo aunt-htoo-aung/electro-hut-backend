@@ -3,12 +3,16 @@ USE electro_hut;
 -- User Table
 CREATE TABLE User (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(100) NOT NULL,
+    gender enum('Male', 'Female', 'Others', '') NOT NULL,
+    date_of_birth date NOT NULL,
     password VARCHAR(255) NOT NULL,
     created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    role ENUM('CUSTOMER', 'ADMIN') DEFAULT 'CUSTOMER'
+    role ENUM('CUSTOMER', 'ADMIN') DEFAULT 'CUSTOMER',
+    profile_url text NOT NULL
 );
 -- Brand Table
 CREATE TABLE Brand (
@@ -66,10 +70,9 @@ CREATE TABLE Orders (
     order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(50),
     total_amount DECIMAL(10, 2),
-    name VARCHAR(50),
     address VARCHAR(200),
     city VARCHAR(200),
-    phone VARCHAR(100),
+    contact_phone VARCHAR(100),
     FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
 -- Order_Items Table

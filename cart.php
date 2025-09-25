@@ -1,6 +1,6 @@
 <?php
 require_once 'db_connect.php';
-include "authenticate.php";
+require_once "authenticate.php";
 
 $user_id = $_SESSION['user_id'];
 
@@ -8,6 +8,7 @@ $user_id = $_SESSION['user_id'];
 try {
     $query = "SELECT 
     c.cart_id,
+    c.product_id,
     c.quantity,
     p.product_name,
     b.brand_name,
@@ -37,14 +38,12 @@ if (isset($_POST['addToCart'])) {
             $update_query = 'UPDATE Cart SET quantity = quantity+ 1 WHERE user_id=? AND product_id=?';
             $stmt = $conn->prepare($update_query);
             $stmt->execute([$user_id, $product_id]);
-            echo "success update cart";
         } else {
             $insert_query = 'INSERT INTO Cart (user_id,product_id,quantity) VALUES (?,?,?)';
             $stmt = $conn->prepare($insert_query);
             $stmt->execute([$user_id, $product_id, 1]);
-            echo "success add cart";
         }
-        header('location:cart.php');
+        header('location:product.php');
     } catch (PDOException $e) {
         $e->getMessage();
     }

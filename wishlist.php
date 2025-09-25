@@ -7,7 +7,8 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Check Wishlist is existed or not
-function check_wishlist($user_id, $product_id, $conn){
+function check_wishlist($user_id, $product_id, $conn)
+{
     try {
         $wishlist_check_query = "SELECT * FROM Wishlist WHERE user_id = ? AND product_id = ?";
         $stmt = $conn->prepare($wishlist_check_query);
@@ -58,7 +59,7 @@ if (isset($_POST['addWishlist'])) {
             $stmt->execute([$user_id, $product_id]);
         }
 
-        header("location:wishlist.php");
+        header("location:product.php");
         exit;
     } catch (PDOException $e) {
         echo "Error: " . $e->getMessage();
