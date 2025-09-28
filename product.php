@@ -1,25 +1,97 @@
 <?php
 require_once 'db_connect.php';
+require_once 'category.php';
+$selectedCategory = $_GET['category'] ?? null;
+$selectedBrand = $_GET['brand'] ?? null;
+$sort = $_GET['sort'] ?? null;
+$conn;
+
+// Fetch products with filters
+$result = getAllProducts($sort, $selectedCategory, $selectedBrand, $conn);
+$products = $result['products'];
+$heading = $result['heading'];
 // Get all product
-try {
+function getAllProducts($sort = null, $category = null, $brand = null, $conn)
+{
+    $params = [];
+    $where = [];
+    $heading = 'Electronic Gadgets';
+    if ($category) {
+        $where[] = 'Category.category_name = :category';
+        $params[':category'] = $category;
+        $heading = $category;
+    }
+
+    if ($brand) {
+        $where[] = 'Brand.brand_name = :brand';
+        $params[':brand'] = $brand;
+        $heading = $brand;
+    }
+
+    $whereClause = '';
+    if (!empty($where)) {
+        $whereClause = 'WHERE ' . implode(' AND ', $where);
+    }
+
+    $orderBy = 'ORDER BY Product.product_id DESC'; // default sort
+
+    if ($sort === 'price_asc') {
+        $orderBy = 'ORDER BY Product.price ASC';
+        $heading .= ' – Price: Low to High';
+    } elseif ($sort === 'price_desc') {
+        $orderBy = 'ORDER BY Product.price DESC';
+        $heading .= ' – Price: High to Low';
+    }
+
+    $query = "
+        SELECT 
+            Product.*, 
+            Images.image_url AS primary_image_url,
+            Brand.brand_name,
+            Category.category_name
+        FROM 
+            Product
+        INNER JOIN Brand ON Product.brand_id = Brand.brand_id
+        INNER JOIN Category ON Product.category_id = Category.category_id
+        LEFT JOIN Images 
+            ON Product.product_id = Images.product_id 
+            AND Images.is_primary = TRUE
+        $whereClause
+        $orderBy
+    ";
+
+    $stmt = $conn->prepare($query);
+    $stmt->execute($params);
+
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    return [
+        'products' => $products,
+        'heading' => $heading
+    ];
+}
+
+// Latest Arrival
+$latestArrivals = getLatestArrivals($conn);
+function getLatestArrivals($conn)
+{
     $query = "SELECT 
     Product.*, 
-    Images.image_url AS primary_image_url,
-    Brand.brand_name,
-    Category.category_name
-    FROM 
-    Product
-    INNER JOIN Brand ON Product.brand_id = Brand.brand_id
-    INNER JOIN Category ON Product.category_id = Category.category_id
-    LEFT JOIN Images 
-    ON Product.product_id = Images.product_id 
-    AND Images.is_primary = TRUE;
-";
+    Images.image_url AS primary_image_url, 
+    Brand.brand_name, 
+    Category.category_name 
+    FROM Product 
+    INNER JOIN Brand ON Product.brand_id = Brand.brand_id 
+    INNER JOIN Category ON Product.category_id = Category.category_id 
+    LEFT JOIN Images ON Product.product_id = Images.product_id AND Images.is_primary = TRUE
+    ORDER BY Product.product_id DESC
+    LIMIT 9;
+    ";
     $stmt = $conn->query($query);
-    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    echo $e->getMessage();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $results;
 }
+
 
 // Add Product
 if (isset($_POST['add_product'])) {
@@ -83,17 +155,17 @@ if (isset($_POST['add_product'])) {
     }
 }
 
-// Delete Product with ID
-// if (isset($_POST['delete_product'])) {
-//     $productId = $_POST['product_id'];
-//     try {
-//         $query = "DELETE FROM Product WHERE product_id = ?";
-//         $stmt = $conn->prepare($query);
-//         $stmt->execute([$productId]);
-//     } catch (PDOException $e) {
-//         echo "Error deleting product: " . $e->getMessage();
-//     }
-// }
+//Get Brand
+try {
+    $sql = "Select * FROM Brand";
+    $stmt = $conn->query($sql);
+    $brands = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    echo "Error fetching orders: " . $e->getMessage();
+}
+
+
+
 // Update Product with ID
 if (isset($_GET['id'])) {
     $product_id = $_GET['id'];

@@ -1,4 +1,7 @@
 <?php
+require_once "db_connect.php";
+require_once "order.php";
+
 try {
     $query = "SELECT 
             (
@@ -8,7 +11,7 @@ try {
                 ORDER BY is_primary DESC, image_id ASC 
                 LIMIT 1
             ) AS image_url,
-            
+            p.product_id,
             p.product_name,
             b.brand_name,
             c.category_name,
@@ -24,7 +27,7 @@ try {
         JOIN 
             Brand b ON p.brand_id = b.brand_id
         JOIN 
-            Categories c ON p.category_id = c.category_id
+            Category c ON p.category_id = c.category_id
 
         GROUP BY 
             p.product_id,
@@ -48,8 +51,9 @@ try {
 try {
     $query = "SELECT
     COUNT(*) AS total_products,
-    SUM(CASE WHEN stock_qty > 0 THEN 1 ELSE 0 END) AS active_stock_products,
-    SUM(CASE WHEN stock_qty = 0 THEN 1 ELSE 0 END) AS inactive_stock_products
+    SUM(CASE WHEN stock_qty > 0 THEN 1 ELSE 0 END) AS active_stock,
+    SUM(CASE WHEN stock_qty = 0 THEN 1 ELSE 0 END) AS inactive_stock,
+     SUM(CASE WHEN stock_qty < 10 THEN 1 ELSE 0 END) AS low_stock
 FROM Product;
 ";
     $stmt = $conn->query($query);
