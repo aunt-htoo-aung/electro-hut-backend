@@ -27,6 +27,7 @@ $user_id = $_SESSION['user_id'] ?? null;
 try {
     $query = "SELECT 
     w.wishlist_id,
+    w.product_id,
     p.product_name,
     b.brand_name,
     p.stock_qty,
